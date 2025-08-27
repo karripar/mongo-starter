@@ -1,5 +1,9 @@
 import { Species } from "../../types/localTypes";
-import mongoose from "mongoose";
+import mongoose, { Model } from "mongoose";
+
+interface SpeciesModel extends Model<Species> {
+  findByArea(polygon: GeoJSON.Polygon): Promise<Species[]>;
+};
 
 const speciesSchema = new mongoose.Schema<Species>({
   species_name: {
@@ -23,7 +27,6 @@ const speciesSchema = new mongoose.Schema<Species>({
     coordinates: {
       type: [Number],
       required: true,
-      index: '2dsphere' // Index for geospatial queries
     }
   },
   image: {
@@ -33,4 +36,18 @@ const speciesSchema = new mongoose.Schema<Species>({
 }
 );
 
-export default mongoose.model<Species>('Species', speciesSchema);
+speciesSchema.index({ location: '2dsphere' });
+
+// Static method
+speciesSchema.statics.findByArea = function (polygon: GeoJSON.Polygon) {
+  return this.find({
+    location: {
+      $geoWithin: {
+        $geometry: polygon,
+      },
+    },
+  });
+};
+
+const speciesModel = mongoose.model<Species, SpeciesModel>('Species', speciesSchema);
+export default speciesModel;

@@ -147,6 +147,28 @@ const getAnimalsWithinBox = async (
   }
 };
 
+const getAnimalsBySpecies = async (
+  req: Request<{ species: string }>,
+  res: Response<Animal[] | MessageResponse>,
+  next: NextFunction,
+) => {
+  try {
+    const { species } = req.params;
+    console.log("Species param:", species);
+
+    if (!species) {
+      return next(new CustomError("Please provide a species", 400));
+    }
+
+    const animals = await animalModel.findBySpecies(species);
+
+    res.json(animals);
+  } catch (error) {
+    next(new CustomError((error as Error).message, 500));
+  }
+};
+
+
 
 export {
   postAnimal,
@@ -155,4 +177,5 @@ export {
   modifyAnimal,
   deleteAnimal,
   getAnimalsWithinBox,
+  getAnimalsBySpecies
 };

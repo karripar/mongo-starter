@@ -108,4 +108,23 @@ const deleteSpecies = async (
   }
 };
 
-export { postSpecies, getSpecies, getSpeciesById, modifySpecies, deleteSpecies };
+const findSpeciesByArea = async (
+  req: Request<{}, {}, GeoJSON.Polygon>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const polygon = req.body;
+
+    if (!polygon || polygon.type !== "Polygon" || !polygon.coordinates) {
+      return next(new CustomError("Invalid polygon data", 400));
+    }
+
+    const species = await speciesModel.findByArea(polygon);
+    res.json(species);
+  } catch (err) {
+    next(new CustomError((err as Error).message, 500));
+  }
+};
+
+export { postSpecies, getSpecies, getSpeciesById, modifySpecies, deleteSpecies, findSpeciesByArea };
