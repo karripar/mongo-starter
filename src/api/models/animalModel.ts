@@ -11,6 +11,12 @@ const animalSchema = new mongoose.Schema<Animal>({
   birthdate: {
     type: Date,
     required: true,
+    validate: {
+      validator: function (value: Date) {
+        return value <= new Date();
+      },
+      message: 'Birthdate cannot be in the future.'
+    }
   },
   species: {
     type: mongoose.Schema.Types.ObjectId,
