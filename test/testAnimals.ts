@@ -81,6 +81,7 @@ const postAnimal = (
         if (err) {
           reject(err);
         } else {
+          console.log('Post animal body: ', response.body);
           const message: string = response.body.message;
           const data: TestAnimal = response.body.data;
           expect(data._id).toBeDefined();

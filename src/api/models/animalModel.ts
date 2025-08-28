@@ -12,12 +12,7 @@ const animalSchema = new mongoose.Schema<Animal>({
   birthdate: {
     type: Date,
     required: true,
-    validate: {
-      validator: function (value: Date) {
-        return value <= new Date();
-      },
-      message: 'Birthdate cannot be in the future.',
-    },
+    max: Date.now(),
   },
   species: {
     type: mongoose.Schema.Types.ObjectId,
@@ -26,49 +21,64 @@ const animalSchema = new mongoose.Schema<Animal>({
   },
   location: {
     type: {
-      type: String, // 'Point'
+      type: String,
       enum: ['Point'],
       required: true,
     },
     coordinates: {
       type: [Number],
-      required: true,
-      index: '2dsphere', // Index for geospatial queries
+      required: true
     },
   },
 });
 
-animalSchema.statics.findBySpecies = async function (species_name: string) {
-  const SpeciesModel = mongoose.model('Species');
-  const speciesDoc = await SpeciesModel.findOne({
-    species_name: {$regex: `^${species_name.trim()}$`, $options: 'i'},
-  });
+animalSchema.index({location: '2dsphere'});
 
-  if (!speciesDoc) {
-    return [];
-  }
-
+animalSchema.statics.findBySpecies = function (species_name: string) {
   return this.aggregate([
-    {$match: {species: speciesDoc._id}},
+    // Join species collection
     {
       $lookup: {
-        from: 'species',
-        localField: 'species',
-        foreignField: '_id',
-        as: 'speciesDetails',
+        from: "species",
+        localField: "species",
+        foreignField: "_id",
+        as: "species_info",
       },
     },
-    {$unwind: '$speciesDetails'},
+    { $unwind: "$species_info" },
+
+    // Join categories collection via species.category
+    {
+      $lookup: {
+        from: "categories",
+        localField: "species_info.category",
+        foreignField: "_id",
+        as: "category_info",
+      },
+    },
+    { $unwind: "$category_info" },
+
+    // Match by species_name (case-insensitive)
+    {
+      $match: {
+        "species_info.species_name": {
+          $regex: `^${species_name.trim()}$`,
+          $options: "i",
+        },
+      },
+    },
+
+    // Remove __v fields
     {
       $project: {
-        animal_name: 1,
-        birthdate: 1,
-        location: 1,
-        species: '$speciesDetails',
+        __v: 0,
+        "species_info.__v": 0,
+        "category_info.__v": 0,
       },
     },
   ]);
 };
+
 
 const animalModel = mongoose.model<Animal, AnimalModel>('Animal', animalSchema);
 
