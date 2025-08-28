@@ -107,15 +107,12 @@ const deleteAnimal = async (
 };
 
 const getAnimalsWithinBox = async (
-  req: Request<{}, {}, {}>,
+  req: Request<{}, {}, {}, {topRight: string; bottomLeft: string}>,
   res: Response<Animal[] | MessageResponse>,
   next: NextFunction,
 ) => {
   try {
-    const { topRight, bottomLeft } = req.query as {
-      topRight: string;
-      bottomLeft: string;
-    };
+    const { topRight, bottomLeft } = req.query;
 
     if (!topRight || !bottomLeft) {
       return next(
@@ -126,16 +123,12 @@ const getAnimalsWithinBox = async (
       );
     }
 
-    // Decode URI and split by comma
-    const [trLat, trLng] = decodeURIComponent(topRight).split(',').map(Number);
-    const [blLat, blLng] = decodeURIComponent(bottomLeft).split(',').map(Number);
-
     const animals = await animalModel.find({
       location: {
         $geoWithin: {
           $box: [
-            [blLng, blLat], // bottom-left [lng, lat]
-            [trLng, trLat], // top-right [lng, lat]
+            topRight.split(','),
+            bottomLeft.split(','),
           ],
         },
       },
@@ -148,19 +141,19 @@ const getAnimalsWithinBox = async (
 };
 
 const getAnimalsBySpecies = async (
-  req: Request<{ species: string }>,
+  req: Request<{ species_name: string }>,
   res: Response<Animal[] | MessageResponse>,
   next: NextFunction,
 ) => {
   try {
-    const { species } = req.params;
-    console.log("Species param:", species);
+    const { species_name } = req.params;
+    console.log("Species param:", species_name);
 
-    if (!species) {
+    if (!species_name) {
       return next(new CustomError("Please provide a species", 400));
     }
 
-    const animals = await animalModel.findBySpecies(species);
+    const animals = await animalModel.findBySpecies(species_name);
 
     res.json(animals);
   } catch (error) {

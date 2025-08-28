@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import { Types, Model} from "mongoose";
 import {Point} from "geojson";
 
 type Category = {
@@ -19,4 +19,8 @@ type Animal = {
   location: Point;
 }
 
-export {Category, Species, Animal};
+interface AnimalModel extends Model<Animal> {
+  findBySpecies(species: string): Promise<Animal[]>;
+};
+
+export {Category, Species, Animal, AnimalModel};
