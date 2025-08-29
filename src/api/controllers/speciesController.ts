@@ -33,15 +33,17 @@ const postSpecies = async (
 }
 
 const getSpecies = async (
-  _req: Request,
-  res: Response<Species[] | MessageResponse>,
+  req: Request,
+  res: Response<Species[]>,
   next: NextFunction,
 ) => {
   try {
-    const species = await speciesModel.find()
-    .populate({ path: 'category', select: '-__v' })
-    .select('-__v');
-    res.json(species);
+    res.json(
+      await speciesModel.find().select('-__v').populate({
+        path: 'category',
+        select: '-__v',
+      }),
+    );
   } catch (error) {
     next(new CustomError((error as Error).message, 500));
   }
@@ -49,22 +51,21 @@ const getSpecies = async (
 
 const getSpeciesById = async (
   req: Request<{id: string}>,
-  res: Response<Species | DBMessageResponse>,
+  res: Response<Species>,
   next: NextFunction,
 ) => {
   try {
-    const {id} = req.params;
-    const species = await speciesModel.findById(id)
-    .populate({ path: 'category', select: '-__v' })
-    .select('-__v');
-
+    const species = await speciesModel
+      .findById(req.params.id)
+      .select('-__v')
+      .populate({
+        path: 'category',
+        select: '-__v',
+      });
     if (!species) {
       return next(new CustomError('Species not found', 404));
     }
-    res.json({
-      message: 'Species found',
-      data: species,
-    });
+    res.json(species);
   } catch (error) {
     next(new CustomError((error as Error).message, 500));
   }
@@ -86,7 +87,7 @@ const modifySpecies = async (
       return next(new CustomError('Category not found', 404));
     }
     res.json({
-      message: 'Category updated',
+      message: 'Species updated',
       data: updatedCategory,
     });
   } catch (error) {
@@ -121,11 +122,13 @@ const findSpeciesByArea = async (
   try {
     const polygon = req.body;
 
-    if (!polygon || polygon.type !== "Polygon" || !polygon.coordinates) {
-      return next(new CustomError("Invalid polygon data", 400));
+    if (polygon.type !== "Polygon") {
+      return next(new CustomError("Invalid polygon type", 400));
     }
 
     const species = await speciesModel.findByArea(polygon)
+
+    console.log('Species found by area: ', species);
     res.json(species);
   } catch (err) {
     next(new CustomError((err as Error).message, 500));

@@ -1,6 +1,5 @@
-import {Animal} from '../src/types/Animal';
-import {Category} from '../src/types/Category';
-import {Species} from '../src/types/Species';
+
+import {Animal, Species, Category} from '../src/types/localTypes';
 
 type TestAnimal = Animal & {
   _id: string;
@@ -10,8 +9,12 @@ type TestSpecies = Species & {
   _id: string;
 };
 
+type PostSpecies = Omit<Species, 'category'> & {
+  category: string;
+};
+
 type TestCategory = Category & {
   _id: string;
 };
 
-export {TestAnimal, TestSpecies, TestCategory};
+export {TestAnimal, TestSpecies, PostSpecies, TestCategory};

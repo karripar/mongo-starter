@@ -1,4 +1,3 @@
-import {Polygon} from 'geojson';
 import mongoose from 'mongoose';
 import app from '../src/app';
 import {testInvalidRoute, testServer} from './testServer';
@@ -28,7 +27,7 @@ import {
   postAnimal,
   putAnimal,
 } from './testAnimals';
-import {TestAnimal, TestCategory, TestSpecies} from './testTypes';
+import {PostSpecies, TestAnimal, TestCategory, TestSpecies} from './testTypes';
 
 describe('GET /api/v1', () => {
   beforeAll(async () => {
@@ -98,16 +97,18 @@ describe('GET /api/v1', () => {
     if (Array.isArray(categoryResponse.data)) {
       return;
     }
-    speciesResponse = await postSpecies(
-      app,
-      'Lion',
-      categoryResponse.data._id,
-      {
+
+    const speciesData: PostSpecies = {
+      species_name: 'Lion',
+      image: 'https://place-hold.it/400x300',
+      location: {
         type: 'Point',
         coordinates: [60.38, 24.6],
       },
-      'dummyimage.jpg',
-    );
+      category: categoryResponse.data._id,
+    };
+
+    speciesResponse = await postSpecies(app, speciesData);
     console.log(speciesResponse);
   });
 
@@ -123,18 +124,20 @@ describe('GET /api/v1', () => {
   });
 
   it('Should get all species by area', async () => {
-    const polygon: Polygon = {
+    const polygon: GeoJSON.Polygon = {
       type: 'Polygon',
       coordinates: [
         [
-          [60.3, 24.5],
-          [60.5, 24.5],
-          [60.5, 24.7],
-          [60.3, 24.7],
-          [60.3, 24.5],
+          [24.5, 60.3],
+          [24.5, 60.5],
+          [24.7, 60.5],
+          [24.7, 60.3],
+          [24.5, 60.3],
         ],
       ],
     };
+
+
     await getSpeciesByArea(app, polygon);
   });
 
@@ -209,7 +212,6 @@ describe('GET /api/v1', () => {
   });
 
   // delete test data
-
   it('Should delete a category', async () => {
     if (Array.isArray(categoryResponse.data)) {
       return;

@@ -24,6 +24,7 @@ const getAnimals = (app: Express): Promise<TestAnimal[]> => {
           reject(err);
         } else {
           const animals: TestAnimal[] = response.body;
+          //console.log('Get animals body: ', response.body);
           animals.forEach((animal) => {
             expect(animal._id).toBeDefined();
             expect(animal.animal_name).toBeDefined();

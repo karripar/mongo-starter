@@ -94,17 +94,21 @@ const modifyCategory = async (
 
 const deleteCategory = async (
   req: Request<{id: string}>,
-  res: Response<MessageResponse>,
+  res: Response<DBMessageResponse>,
   next: NextFunction,
 ) => {
   try {
-    const {id} = req.params;
-    const deletedCategory = await categoryModel.findByIdAndDelete(id);
+    const deletedCategory = await categoryModel.findByIdAndDelete(
+      req.params.id,
+    );
+
     if (!deletedCategory) {
-      return next(new CustomError('Category not found', 404));
+      next(new CustomError('Category not found', 404));
+      return;
     }
     res.json({
       message: 'Category deleted',
+      data: deletedCategory,
     });
   } catch (error) {
     next(new CustomError((error as Error).message, 500));

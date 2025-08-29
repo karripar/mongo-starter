@@ -1,13 +1,11 @@
-import {Animal} from '../../types/localTypes';
 import mongoose from 'mongoose';
-import {AnimalModel} from '../../types/localTypes';
+import {Animal, AnimalModel} from '../../types/localTypes';
 
 const animalSchema = new mongoose.Schema<Animal>({
   animal_name: {
     type: String,
     required: true,
-    trim: true,
-    minlength: 2,
+    minLength: 2,
   },
   birthdate: {
     type: Date,
@@ -27,59 +25,49 @@ const animalSchema = new mongoose.Schema<Animal>({
     },
     coordinates: {
       type: [Number],
-      required: true
+      required: true,
+      index: '2dsphere',
     },
   },
 });
 
-animalSchema.index({location: '2dsphere'});
-
 animalSchema.statics.findBySpecies = function (species_name: string) {
   return this.aggregate([
-    // Join species collection
     {
       $lookup: {
-        from: "species",
-        localField: "species",
-        foreignField: "_id",
-        as: "species_info",
+        from: 'species',
+        localField: 'species',
+        foreignField: '_id',
+        as: 'species',
       },
     },
-    { $unwind: "$species_info" },
-
-    // Join categories collection
+    {
+      $unwind: '$species',
+    },
     {
       $lookup: {
-        from: "categories",
-        localField: "species_info.category",
-        foreignField: "_id",
-        as: "category_info",
+        from: 'categories',
+        localField: 'species.category',
+        foreignField: '_id',
+        as: 'species.category',
       },
     },
-    { $unwind: "$category_info" },
-
-    // Match by species_name (case-insensitive) because why not
+    {
+      $unwind: '$species.category',
+    },
     {
       $match: {
-        "species_info.species_name": {
-          $regex: `^${species_name.trim()}$`,
-          $options: "i",
-        },
+        'species.species_name': species_name,
       },
     },
-
-    // Remove __v fields
     {
       $project: {
         __v: 0,
-        "species_info.__v": 0,
-        "category_info.__v": 0,
+        'species.__v': 0,
+        'species.category.__v': 0,
       },
     },
   ]);
 };
 
-
-const animalModel = mongoose.model<Animal, AnimalModel>('Animal', animalSchema);
-
-export default animalModel;
+export default mongoose.model<Animal, AnimalModel>('Animal', animalSchema);
