@@ -7,7 +7,7 @@ type Category = {
 
 type Species = {
   species_name: string;
-  category: Types.ObjectId; // Reference to Category
+  category: Types.ObjectId | Category; // Reference to Category
   location: Point;
   image: string;
 }
@@ -15,7 +15,7 @@ type Species = {
 type Animal = {
   animal_name: string;
   birthdate: Date;
-  species: Types.ObjectId; // Reference to Species
+  species: Types.ObjectId | Species; // Reference to Species
   location: Point;
 }
 

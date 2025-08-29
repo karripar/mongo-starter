@@ -47,7 +47,7 @@ animalSchema.statics.findBySpecies = function (species_name: string) {
     },
     { $unwind: "$species_info" },
 
-    // Join categories collection via species.category
+    // Join categories collection
     {
       $lookup: {
         from: "categories",
@@ -58,7 +58,7 @@ animalSchema.statics.findBySpecies = function (species_name: string) {
     },
     { $unwind: "$category_info" },
 
-    // Match by species_name (case-insensitive)
+    // Match by species_name (case-insensitive) because why not
     {
       $match: {
         "species_info.species_name": {

@@ -30,7 +30,7 @@ const postAnimal = async (
   } catch (error) {
     next(new CustomError((error as Error).message, 500));
   }
-}
+};
 
 const getAnimals = async (
   _req: Request,
@@ -38,10 +38,14 @@ const getAnimals = async (
   next: NextFunction,
 ) => {
   try {
-    const animals = await animalModel.find()
-    .populate('species')
-    .populate('category')
-    .select('-__v');
+    const animals = await animalModel
+      .find()
+      .populate({
+        path: 'species',
+        select: '-__v',
+        populate: {path: 'category', select: '-__v'},
+      })
+      .select('-__v');
     res.json(animals);
   } catch (error) {
     next(new CustomError((error as Error).message, 500));
@@ -55,10 +59,14 @@ const getAnimalById = async (
 ) => {
   try {
     const {id} = req.params;
-    const animal = await animalModel.findById(id)
-    .populate('species')
-    .populate('category')
-    .select('-__v');
+    const animal = await animalModel
+      .findById(id)
+      .populate({
+        path: 'species',
+        select: '-__v',
+        populate: {path: 'category', select: '-__v'},
+      })
+      .select('-__v');
     if (!animal) {
       return next(new CustomError('Animal not found', 404));
     }
@@ -118,7 +126,7 @@ const getAnimalsWithinBox = async (
   next: NextFunction,
 ) => {
   try {
-    const { topRight, bottomLeft } = req.query;
+    const {topRight, bottomLeft} = req.query;
 
     if (!topRight || !bottomLeft) {
       return next(
@@ -129,19 +137,20 @@ const getAnimalsWithinBox = async (
       );
     }
 
-    const animals = await animalModel.find({
-      location: {
-        $geoWithin: {
-          $box: [
-            topRight.split(','),
-            bottomLeft.split(','),
-          ],
+    const animals = await animalModel
+      .find({
+        location: {
+          $geoWithin: {
+            $box: [topRight.split(','), bottomLeft.split(',')],
+          },
         },
-      },
-    })
-    .populate('species')
-    .populate('category')
-    .select('-__v');
+      })
+      .populate({
+        path: 'species',
+        select: '-__v',
+        populate: {path: 'category', select: '-__v'},
+      })
+      .select('-__v'); // Exclude __v field
 
     res.json(animals);
   } catch (error) {
@@ -150,27 +159,25 @@ const getAnimalsWithinBox = async (
 };
 
 const getAnimalsBySpecies = async (
-  req: Request<{ species_name: string }>,
+  req: Request<{species_name: string}>,
   res: Response<Animal[] | MessageResponse>,
   next: NextFunction,
 ) => {
   try {
-    const { species_name } = req.params;
-    console.log("Species param:", species_name);
+    const {species_name} = req.params;
+    console.log('Species param:', species_name);
 
     if (!species_name) {
-      return next(new CustomError("Please provide a species", 400));
+      return next(new CustomError('Please provide a species', 400));
     }
 
-    const animals = await animalModel.findBySpecies(species_name)
+    const animals = await animalModel.findBySpecies(species_name);
 
     res.json(animals);
   } catch (error) {
     next(new CustomError((error as Error).message, 500));
   }
 };
-
-
 
 export {
   postAnimal,
@@ -179,5 +186,5 @@ export {
   modifyAnimal,
   deleteAnimal,
   getAnimalsWithinBox,
-  getAnimalsBySpecies
+  getAnimalsBySpecies,
 };

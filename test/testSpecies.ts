@@ -3,6 +3,7 @@ import {MessageResponse} from '../src/types/Messages';
 import {Express} from 'express';
 import request from 'supertest';
 import {TestSpecies} from './testTypes';
+import { Species } from '../src/types/localTypes';
 
 // TODO: Add tests for the following:
 // 1. Get all species
@@ -63,11 +64,13 @@ const postSpecies = (
   species_name: string,
   category: string,
   location: {type: string; coordinates: number[]},
+  image: string,
 ): Promise<DBMessageResponse> => {
   return new Promise((resolve, reject) => {
+    const data: Species = { species_name, category, location, image };
     request(app)
       .post('/api/v1/species')
-      .send({species_name, category, location})
+      .send({species_name, category, location, image})
       .expect(201, (err, response) => {
         if (err) {
           reject(err);

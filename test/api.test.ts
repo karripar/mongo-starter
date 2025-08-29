@@ -106,6 +106,7 @@ describe('GET /api/v1', () => {
         type: 'Point',
         coordinates: [60.38, 24.6],
       },
+      'dummyimage.jpg',
     );
     console.log(speciesResponse);
   });

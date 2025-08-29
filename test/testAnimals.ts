@@ -87,6 +87,7 @@ const postAnimal = (
           expect(data._id).toBeDefined();
           expect(data.animal_name).toBe(animal_name);
           expect(data.species).toBe(species);
+          expect(message).toBe('Animal created');
           birthdate = new Date(birthdate);
           expect(data.location).toStrictEqual(location);
           resolve(response.body);
@@ -111,6 +112,7 @@ const putAnimal = (
           reject(err);
         } else {
           const message: string = response.body.message;
+          expect(message).toBe('Animal updated');
           const data: TestAnimal = response.body.data;
           expect(data._id).toBeDefined();
           expect(data.animal_name).toBe(animal_name);
